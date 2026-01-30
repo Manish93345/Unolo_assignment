@@ -40,3 +40,19 @@ Fix:
 Code changes:
     - DATE_SUB(NOW(), INTERVAL 7 DAY)
     + datetime('now', '-7 days')
+
+
+# Bug 4 — History Page Crash Due To Null State (Hisory page not loading)
+Location:
+    frontend/src/pages/History.jsx
+    Line number -> 5
+
+Issue:
+    checkins state is initializing with null so getting crashed on calling reduce()
+
+Fix:
+    Initialize state with empty array.
+
+Code changes:
+    - const [checkins, setCheckins] = useState(null);
+    + const [checkins, setCheckins] = useState([]);
