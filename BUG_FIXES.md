@@ -25,3 +25,18 @@ Fix:
 Code changes: 
     - { id: user.id, email: user.email, role: user.role, name: user.name, password: user.password }
     + { id: user.id, email: user.email, role: user.role, name: user.name }
+
+
+# Bug 3 — Dashboard API 500 Error Due To Database Query
+Location:
+    backend/routes/dashboard.js
+
+Issue: 
+    Here we are using SQLite database but the Query is written in MySQL format (DATE_SUB() and NOW()). 
+
+Fix: 
+    Replaced MySQL date functions with SQLite datetime() function.
+
+Code changes:
+    - DATE_SUB(NOW(), INTERVAL 7 DAY)
+    + datetime('now', '-7 days')
