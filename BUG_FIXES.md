@@ -69,3 +69,15 @@ Issue:
 Code change:
     - INSERT INTO checkins (employee_id, client_id, lat, lng, notes, status)
     + INSERT INTO checkins (employee_id, client_id, latitude, longitude, notes, status)
+
+# Bug 6 — SQLite String Quoting Causing Insert Failure (Fixing checkin problem)
+Location: 
+    backend/routes/checkin.js
+    Line -> 45
+
+Issue:
+    CheckIn API call database error due to the difference between MySQL and SQLite SQL syntax
+
+Fix:
+    - status = "checked_in"
+    + status = 'checked_in'
