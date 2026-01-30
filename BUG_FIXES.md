@@ -56,3 +56,16 @@ Fix:
 Code changes:
     - const [checkins, setCheckins] = useState(null);
     + const [checkins, setCheckins] = useState([]);
+
+
+# Bug 5— Database mismatch variable name
+Location:
+    backend/routes/checkin.js
+    Line number -> 57
+
+Issue:
+    Longitude and Latitude were written as Lat, long
+
+Code change:
+    - INSERT INTO checkins (employee_id, client_id, lat, lng, notes, status)
+    + INSERT INTO checkins (employee_id, client_id, latitude, longitude, notes, status)
