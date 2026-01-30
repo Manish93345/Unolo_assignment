@@ -15,4 +15,7 @@ Added warning message if employee is more than 500 meters away from client locat
 Displayed distance data in Check-in History table.
 
 
+# Feature B: Daily Summary Report API
 
+created a file reports.js in backend/routes
+Daily Manager Summary Report API with role-based access and aggregated SQL analytics.
