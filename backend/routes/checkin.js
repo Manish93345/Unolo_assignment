@@ -85,8 +85,8 @@ router.put('/checkout', authenticateToken, async (req, res) => {
         }
 
         await pool.execute(
-            'UPDATE checkins SET checkout_time = NOW(), status = "checked_out" WHERE id = ?',
-            [activeCheckins[0].id]
+            "UPDATE checkins SET checkout_time = datetime('now'), status = ? WHERE id = ?",
+                ['checked_out', activeCheckins[0].id]
         );
 
         res.json({ success: true, message: 'Checked out successfully' });

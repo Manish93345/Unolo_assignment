@@ -81,3 +81,18 @@ Issue:
 Fix:
     - status = "checked_in"
     + status = 'checked_in'
+
+# Bug 7 — SQLite datetime syntax error (Fixing Chekout problem)
+Location: 
+    backend/routes/checkin.js
+    Line -> 88
+
+Issue: 
+    Syntax for checkout was not correct
+
+Fix:
+    Fixed in the syntax of SQLite
+
+Code change:
+    - 'UPDATE checkins SET checkout_time = datetime("now"), status = ? WHERE id = ?', ['checked_out', activeCheckins[0].id])
+    + "UPDATE checkins SET checkout_time = datetime('now'), status = ? WHERE id = ?", ['checked_out', activeCheckins[0].id])
