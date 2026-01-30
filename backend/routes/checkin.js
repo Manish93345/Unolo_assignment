@@ -2,7 +2,28 @@ const express = require('express');
 const pool = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 
+
+
+
+
 const router = express.Router();
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
 
 // Get assigned clients for employee
 router.get('/clients', authenticateToken, async (req, res) => {
@@ -27,7 +48,7 @@ router.post('/', authenticateToken, async (req, res) => {
         const { client_id, latitude, longitude, notes } = req.body;
 
         if (!client_id) {
-            return res.status(200).json({ success: false, message: 'Client ID is required' });
+            return res.status(400).json({ success: false, message: 'Client ID is required' });
         }
 
         // Check if employee is assigned to this client
@@ -53,16 +74,42 @@ router.post('/', authenticateToken, async (req, res) => {
             });
         }
 
+        const [clientData] = await pool.execute(
+            `SELECT latitude, longitude FROM clients WHERE id = ?`,
+            [client_id]
+            );
+
+        if (clientData.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Client location not found"
+            });
+        }
+        
+        const clientLat = parseFloat(clientData[0].latitude);
+        const clientLng = parseFloat(clientData[0].longitude);
+
+        const distance = calculateDistance(
+            parseFloat(latitude),
+            parseFloat(longitude),
+            clientLat,
+            clientLng
+        );
+
+        const roundedDistance = parseFloat(distance.toFixed(2));
+
+
         const [result] = await pool.execute(
-            `INSERT INTO checkins (employee_id, client_id, latitude, longitude, notes, status)
-             VALUES (?, ?, ?, ?, ?, 'checked_in')`,
-            [req.user.id, client_id, latitude, longitude, notes || null]
+            `INSERT INTO checkins (employee_id, client_id, latitude, longitude, distance_from_client, notes, status)
+             VALUES (?, ?, ?, ?, ?, ?, 'checked_in')`,
+            [req.user.id, client_id, latitude, longitude, roundedDistance, notes || null]
         );
 
         res.status(201).json({
             success: true,
             data: {
                 id: result.insertId,
+                distance_from_client: roundedDistance,
                 message: 'Checked in successfully'
             }
         });
@@ -110,10 +157,12 @@ router.get('/history', authenticateToken, async (req, res) => {
         const params = [req.user.id];
 
         if (start_date) {
-            query += ` AND DATE(ch.checkin_time) >= '${start_date}'`;
+            query += ` AND DATE(ch.checkin_time) >= ?`;
+            params.push(start_date);
         }
         if (end_date) {
-            query += ` AND DATE(ch.checkin_time) <= '${end_date}'`;
+            query += ` AND DATE(ch.checkin_time) <= ?`;
+            params.push(end_date);
         }
 
         query += ' ORDER BY ch.checkin_time DESC';

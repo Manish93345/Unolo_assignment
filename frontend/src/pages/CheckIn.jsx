@@ -11,6 +11,7 @@ function CheckIn({ user }) {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [distance, setDistance] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -67,13 +68,18 @@ function CheckIn({ user }) {
                 longitude: location?.longitude,
                 notes: notes
             });
+            setDistance(response.data.data.distance_from_client);
+            if (distance > 0.5) {
+                setWarning("You are far from the client location");
+            }
 
             if (response.data.success) {
                 setSuccess('Checked in successfully!');
                 setSelectedClient('');
                 setNotes('');
                 fetchData(); // Refresh data
-            } else {
+            }
+            else {
                 setError(response.data.message);
             }
         } catch (err) {
@@ -90,7 +96,7 @@ function CheckIn({ user }) {
 
         try {
             const response = await api.put('/checkin/checkout');
-            
+
             if (response.data.success) {
                 setSuccess('Checked out successfully!');
                 setActiveCheckin(null);
@@ -164,7 +170,7 @@ function CheckIn({ user }) {
             {!activeCheckin && (
                 <div className="bg-white rounded-lg shadow p-6">
                     <h3 className="font-semibold mb-4">New Check-in</h3>
-                    
+
                     <form onSubmit={handleCheckIn}>
                         <div className="mb-4">
                             <label className="block text-gray-700 text-sm font-medium mb-2">
@@ -206,6 +212,16 @@ function CheckIn({ user }) {
                             {submitting ? 'Checking in...' : 'Check In'}
                         </button>
                     </form>
+                    {distance !== null && (
+                        <p className="mt-2 text-sm text-gray-600">
+                            Distance from client: {distance} KM
+                        </p>
+                    )}
+                    {distance > 0.5 && (
+                        <p className="text-red-500 text-sm">
+                            You are far from the client location
+                        </p>
+                    )}
                 </div>
             )}
         </div>
